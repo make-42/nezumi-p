@@ -89,10 +89,11 @@ impl App {
             .repeat_highlight_symbol(true);
 
         let mut constraints = vec![];
-        for (i, _) in self.collected_data.departure_data_list[self.stations_state.selected().unwrap()]
-            .siri
-            .service_delivery
-            .stop_monitoring_delivery[0]
+        for (i, _) in self.collected_data.departure_data_list
+            [self.stations_state.selected().unwrap()]
+        .siri
+        .service_delivery
+        .stop_monitoring_delivery[0]
             .monitored_stop_visit
             .iter()
             .enumerate()
@@ -120,10 +121,11 @@ impl App {
             let departure_time_datetime = Local::now()
                 .checked_add_signed(
                     DateTime::parse_from_rfc3339(
-                        self.collected_data.departure_data_list[self.stations_state.selected().unwrap()]
-                            .siri
-                            .service_delivery
-                            .stop_monitoring_delivery[0]
+                        self.collected_data.departure_data_list
+                            [self.stations_state.selected().unwrap()]
+                        .siri
+                        .service_delivery
+                        .stop_monitoring_delivery[0]
                             .monitored_stop_visit[i]
                             .monitored_vehicle_journey
                             .monitored_call
@@ -139,37 +141,43 @@ impl App {
             let time_till_departure = departure_time_datetime.signed_duration_since(Local::now());
 
             let departure_data = Block::bordered().title(
-                Span::from(self.collected_data.departure_data_list[self.stations_state.selected().unwrap()]
-                .siri
-                .service_delivery
-                .stop_monitoring_delivery[0]
-                .monitored_stop_visit[0]
-                .monitored_vehicle_journey
-                .direction_name[0]
-                .value
-                .clone()).style(Style::default().bold().italic().fg(Color::Indexed(3)))
-                ,
+                Span::from(
+                    self.collected_data.departure_data_list
+                        [self.stations_state.selected().unwrap()]
+                    .siri
+                    .service_delivery
+                    .stop_monitoring_delivery[0]
+                        .monitored_stop_visit[0]
+                        .monitored_vehicle_journey
+                        .direction_name[0]
+                        .value
+                        .clone(),
+                )
+                .style(Style::default().bold().italic().fg(Color::Indexed(3))),
             );
             let departure_time = Line::styled(
                 format!("{}", departure_time_datetime.format("%H:%M:%S")),
                 Style::default().bold().italic(),
             );
-            let departure_status = self.collected_data.departure_data_list[self.stations_state.selected().unwrap()]
+            let departure_status = self.collected_data.departure_data_list
+                [self.stations_state.selected().unwrap()]
             .siri
             .service_delivery
             .stop_monitoring_delivery[0]
-            .monitored_stop_visit[0]
-            .monitored_vehicle_journey
-            .monitored_call.departure_status.as_str();
+                .monitored_stop_visit[0]
+                .monitored_vehicle_journey
+                .monitored_call
+                .departure_status
+                .as_str();
             let departure_time_relative = Line::styled(
                 format!(
                     "{} {}",
                     time_till_departure.human(Truncate::Second).to_string(),
-                    match departure_status
-                    {
+                    match departure_status {
                         "onTime" => "ON TIME".into(),
                         _ => departure_status,
-                    }),
+                    }
+                ),
                 Style::default().bold().italic(),
             )
             .alignment(Alignment::Right);
@@ -178,10 +186,15 @@ impl App {
             let [left_area, middle_area, right_area] = horizontal.areas(calc_inner_rect);
 
             let progress_bar = Gauge::default()
-                .block(Block::bordered().title(Span::from("Distance").style(Style::default().bold().italic().fg(Color::Indexed(2)))))
+                .block(
+                    Block::bordered().title(
+                        Span::from("Distance")
+                            .style(Style::default().bold().italic().fg(Color::Indexed(2))),
+                    ),
+                )
                 .gauge_style(Style::new().white().on_black().italic())
                 .percent(
-                    cmp::min(time_till_departure.num_seconds() / 36, 100)
+                    cmp::max(cmp::min(time_till_departure.num_seconds() / 36, 100), 0)
                         .try_into()
                         .unwrap(),
                 ); // Starts at 60min
@@ -192,17 +205,52 @@ impl App {
             frame.render_widget(departure_data, calc_inner_rect);
         }
 
-        if self.collected_data.general_message_data_list[self.stations_state.selected().unwrap()].siri.service_delivery.general_message_delivery[0].info_message.len() != 0{
+        if self.collected_data.general_message_data_list[self.stations_state.selected().unwrap()]
+            .siri
+            .service_delivery
+            .general_message_delivery[0]
+            .info_message
+            .len()
+            != 0
+        {
             let paragraph = Paragraph::new(
-                self.collected_data.general_message_data_list[self.stations_state.selected().unwrap()].siri.service_delivery.general_message_delivery[0].info_message[0].info_channel_content.message[0].message_text.value.clone()).style(
-                Style::default().bold().italic(),
-            ).block(Block::bordered().title(format!("Status: {}",self.collected_data.general_message_data_list[self.stations_state.selected().unwrap()].siri.service_delivery.general_message_delivery[0].info_message[0].info_channel_ref.value))).style(Style::default().bold().italic().fg(Color::Indexed(1)))
-            .alignment(Alignment::Center).wrap(Wrap {trim: false});
+                self.collected_data.general_message_data_list
+                    [self.stations_state.selected().unwrap()]
+                .siri
+                .service_delivery
+                .general_message_delivery[0]
+                    .info_message[0]
+                    .info_channel_content
+                    .message[0]
+                    .message_text
+                    .value
+                    .clone(),
+            )
+            .style(Style::default().bold().italic())
+            .block(Block::bordered().title(format!(
+                    "Status: {}",
+                    self.collected_data.general_message_data_list
+                        [self.stations_state.selected().unwrap()]
+                    .siri
+                    .service_delivery
+                    .general_message_delivery[0]
+                        .info_message[0]
+                        .info_channel_ref
+                        .value
+                )))
+            .style(Style::default().bold().italic().fg(Color::Indexed(1)))
+            .alignment(Alignment::Center)
+            .wrap(Wrap { trim: false });
 
             frame.render_widget(paragraph, status_area);
         } else {
-
-        frame.render_widget(Block::bordered().title(Span::from("Status").style(Style::default().bold().italic().fg(Color::Indexed(2)))), status_area);
+            frame.render_widget(
+                Block::bordered().title(
+                    Span::from("Status")
+                        .style(Style::default().bold().italic().fg(Color::Indexed(2))),
+                ),
+                status_area,
+            );
         }
 
         frame.render_stateful_widget(
@@ -210,9 +258,26 @@ impl App {
             stations_area.inner(default_margin),
             &mut self.stations_state,
         );
-        frame.render_widget(Block::bordered().title(Span::from(format!("nezumi-p {}",consts::VERSION)).style(Style::default().bold().italic().fg(Color::Indexed(1)))), title_area);
-        frame.render_widget(Block::bordered().title(Span::from("Stops").style(Style::default().bold().italic().fg(Color::Indexed(2)))), stations_area);
-        frame.render_widget(Block::bordered().title(Span::from("Timetable").style(Style::default().bold().italic().fg(Color::Indexed(2)))), timetable_area);
+        frame.render_widget(
+            Block::bordered().title(
+                Span::from(format!("nezumi-p {}", consts::VERSION))
+                    .style(Style::default().bold().italic().fg(Color::Indexed(1))),
+            ),
+            title_area,
+        );
+        frame.render_widget(
+            Block::bordered().title(
+                Span::from("Stops").style(Style::default().bold().italic().fg(Color::Indexed(2))),
+            ),
+            stations_area,
+        );
+        frame.render_widget(
+            Block::bordered().title(
+                Span::from("Timetable")
+                    .style(Style::default().bold().italic().fg(Color::Indexed(2))),
+            ),
+            timetable_area,
+        );
     }
 
     fn handle_key_event(&mut self, key_event: KeyEvent) {

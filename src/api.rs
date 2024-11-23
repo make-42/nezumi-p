@@ -2,7 +2,6 @@ use serde::Deserialize;
 
 use crate::config::Config;
 
-
 // Departure Data Types
 #[derive(Deserialize, Debug, Default)]
 pub struct Value {
@@ -111,13 +110,11 @@ pub struct Message {
 
 #[derive(Debug, Default)]
 pub struct CollectedData {
-    pub departure_data_list: Vec<DepartureData> ,
+    pub departure_data_list: Vec<DepartureData>,
     pub general_message_data_list: Vec<GeneralMessageData>,
 }
 
-pub async fn get_departures(
-    config: Config,
-) -> Result<CollectedData, Box<dyn std::error::Error>> {
+pub async fn get_departures(config: Config) -> Result<CollectedData, Box<dyn std::error::Error>> {
     let mut departure_data = vec![];
     let mut general_message_data = vec![];
     let client = reqwest::Client::new();
@@ -143,8 +140,8 @@ pub async fn get_departures(
         let general_messages: GeneralMessageData = serde_json::from_str(&body)?;
         general_message_data.push(general_messages);
     }
-    Ok(CollectedData{
+    Ok(CollectedData {
         departure_data_list: departure_data,
-        general_message_data_list: general_message_data
+        general_message_data_list: general_message_data,
     })
 }
