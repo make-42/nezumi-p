@@ -30,7 +30,8 @@ pub struct Departure {
     // pub line_ref: Value,
     #[serde(rename = "MonitoredCall")]
     pub monitored_call: MonitoredCall,
-    //#[serde(rename = "VehicleFeatureRef")] pub vehicle_feature_ref: Vec<String>,
+    #[serde(rename = "VehicleFeatureRef")]
+    pub vehicle_feature_ref: Vec<String>,
 }
 
 #[derive(Deserialize, Debug, Default)]

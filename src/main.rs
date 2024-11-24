@@ -88,6 +88,8 @@ impl App {
             .highlight_symbol(">> ")
             .repeat_highlight_symbol(true);
 
+        let (_, terminal_height) = crossterm::terminal::size().unwrap();
+
         let mut constraints = vec![];
         for (i, _) in self.collected_data.departure_data_list
             [self.stations_state.selected().unwrap()]
@@ -99,9 +101,14 @@ impl App {
             .enumerate()
         {
             if i == 0 {
-                constraints.push(Constraint::Length(6));
+                constraints.push(Constraint::Length(7));
+            } else if i
+                > (cmp::max(i32::from(terminal_height / 6) - 3, 0))
+                    .try_into()
+                    .unwrap()
+            {
             } else {
-                constraints.push(Constraint::Length(5));
+                constraints.push(Constraint::Length(6));
             }
         }
 
@@ -112,8 +119,12 @@ impl App {
                 Rect::new(
                     departure_vertical_area.x + 1,
                     departure_vertical_area.y + 1,
-                    departure_vertical_area.width - 2,
-                    departure_vertical_area.height - 1,
+                    cmp::max(i32::from(departure_vertical_area.width) - 2, 0)
+                        .try_into()
+                        .unwrap(),
+                    cmp::max(i32::from(departure_vertical_area.height) - 1, 0)
+                        .try_into()
+                        .unwrap(),
                 )
             } else {
                 departure_vertical_area.inner(timetable_margin_end)
@@ -175,15 +186,18 @@ impl App {
                     time_till_departure.human(Truncate::Second).to_string(),
                     match departure_status {
                         "onTime" => "ON TIME".into(),
+                        "delayed" => "DELAYED".into(),
                         _ => departure_status,
-                    }
+                    },
                 ),
                 Style::default().bold().italic(),
             )
             .alignment(Alignment::Right);
 
             let horizontal = Layout::horizontal([Length(14), Fill(1), Length(20)]);
-            let [left_area, middle_area, right_area] = horizontal.areas(calc_inner_rect);
+            let vertical = Layout::vertical([Fill(1),Length(1)]);
+            let [top_area,bottom_area] = vertical.areas(calc_inner_rect);
+            let [left_area, middle_area, right_area] = horizontal.areas(top_area);
 
             let progress_bar = Gauge::default()
                 .block(
@@ -198,6 +212,35 @@ impl App {
                         .try_into()
                         .unwrap(),
                 ); // Starts at 60min
+
+                frame.render_widget(
+                        Line::from(if self.collected_data.departure_data_list
+                            [self.stations_state.selected().unwrap()]
+                        .siri
+                        .service_delivery
+                        .stop_monitoring_delivery[0]
+                            .monitored_stop_visit[0]
+                            .monitored_vehicle_journey
+                            .vehicle_feature_ref
+                            .len()
+                            != 0
+                        {
+                            "/˳˳_˳˳][˳˳_˳˳][˳˳_˳˳][˳˳_˳˳][˳˳_˳˳][˳˳_˳˳][˳˳_˳˳\\".to_string()
+                        } else {
+                            "/˳˳_˳˳][˳˳_˳˳][˳˳_˳˳][˳˳_˳˳\\".to_string()
+                        })
+                            .style(Style::default().bold().fg(Color::Indexed(1))).alignment(Alignment::Center),
+                            Rect::new(
+                                bottom_area.x+1,
+                                bottom_area.y-1,
+                                cmp::max(i32::from(bottom_area.width)-2, 0)
+                                    .try_into()
+                                    .unwrap(),
+                                cmp::max(i32::from(bottom_area.height), 0)
+                                    .try_into()
+                                    .unwrap(),
+                            ),
+                );
 
             frame.render_widget(progress_bar, middle_area.inner(thin_margin));
             frame.render_widget(departure_time, left_area.inner(default_margin));
